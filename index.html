@@ -3,155 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub 文件浏览器</title>
+    <title>Tsinghua Mirror Style File Index</title>
     <style>
         :root {
-            --gh-black: #24292e;
-            --gh-blue: #0366d6;
-            --gh-gray: #f6f8fa;
-            --gh-border: #e1e4e8;
+            --tsinghua-blue: #003366;
+            --tsinghua-light-blue: #0066cc;
+            --tsinghua-gray: #f5f5f5;
+            --tsinghua-dark-gray: #666666;
         }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1.6;
             margin: 0;
-            padding: 20px;
-            background-color: white;
-            color: var(--gh-black);
+            padding: 0;
+            background-color: var(--tsinghua-gray);
+            color: #333;
         }
+        
         .container {
-            max-width: 1012px;
-            margin: 0 auto;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 2px;
         }
+        
         header {
-            padding: 16px 0;
-            border-bottom: 1px solid var(--gh-border);
-            margin-bottom: 16px;
+            background-color: var(--tsinghua-blue);
+            color: white;
+            padding: 15px 20px;
+            border-bottom: 3px solid var(--tsinghua-light-blue);
         }
+        
         h1 {
-            font-size: 24px;
             margin: 0;
+            font-size: 22px;
+            font-weight: normal;
         }
+        
+        .path {
+            font-size: 13px;
+            color: #ccc;
+            margin-top: 5px;
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
-            border: 1px solid var(--gh-border);
-            border-radius: 6px;
+            font-size: 14px;
         }
-        th, td {
-            padding: 10px 16px;
-            text-align: left;
-            border-bottom: 1px solid var(--gh-border);
-        }
+        
         th {
-            background-color: var(--gh-gray);
-            font-weight: 600;
+            background-color: var(--tsinghua-gray);
+            color: var(--tsinghua-blue);
+            padding: 10px 15px;
+            text-align: left;
+            font-weight: normal;
+            border-bottom: 1px solid #ddd;
         }
+        
+        td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
         tr:hover {
-            background-color: var(--gh-gray);
+            background-color: #f9f9f9;
         }
+        
         a {
-            color: var(--gh-blue);
+            color: var(--tsinghua-light-blue);
             text-decoration: none;
         }
+        
         a:hover {
             text-decoration: underline;
         }
+        
         .icon {
             margin-right: 8px;
-            width: 16px;
-            display: inline-block;
+            color: var(--tsinghua-dark-gray);
         }
+        
+        .loading, .error {
+            padding: 30px;
+            text-align: center;
+            color: var(--tsinghua-dark-gray);
+        }
+        
         .error {
-            color: #cb2431;
-            padding: 20px;
-            border: 1px solid #ffdce0;
-            background-color: #ffebef;
-            border-radius: 6px;
+            color: #cc0000;
+        }
+        
+        .footer {
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--tsinghua-dark-gray);
+            border-top: 1px solid #eee;
+        }
+        
+        .sortable {
+            cursor: pointer;
+            position: relative;
+            padding-right: 20px;
+        }
+        
+        .sortable::after {
+            content: "↓↑";
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: #999;
+        }
+        
+        .sorted-asc::after {
+            content: "↑";
+            color: var(--tsinghua-light-blue);
+        }
+        
+        .sorted-desc::after {
+            content: "↓";
+            color: var(--tsinghua-light-blue);
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>文件浏览器</h1>
-            <div id="path">当前路径: /</div>
+            <h1>Index of /download</h1>
+            <div class="path">Tsinghua Mirror Style File Index</div>
         </header>
 
         <div id="content">
-            <div>加载中...</div>
+            <div class="loading">Loading file list...</div>
+        </div>
+
+        <div class="footer">
+            <p>© <span id="year"></span> File Hosting Service | Style from Tsinghua Mirror</p>
         </div>
     </div>
 
     <script>
-        // 重要配置 - 必须修改！
-        const CONFIG = {
-            // 修改为您的GitHub用户名
-            username: 'tangyuhan-9015',
-            
-            // 修改为您的仓库名（如果是username.github.io则留空）
-            repository: '',
-            
-            // 要浏览的目录（默认为根目录）
-            directory: 'download'
+        // 配置信息
+        const config = {
+            owner: 'tangyuhan-9015',
+            repo: 'github.io',
+            path: 'download'
         };
 
-        // 获取文件列表
-        async function loadFiles() {
-            const repoPath = CONFIG.repository ? `${CONFIG.username}/${CONFIG.repository}` : `${CONFIG.username}.github.io`;
-            const apiUrl = `https://api.github.com/repos/${repoPath}/contents/${CONFIG.directory}`;
+        // 全局数据
+        let allFiles = [];
+        let currentSort = { field: 'name', direction: 'asc' };
+
+        // 主函数
+        async function init() {
+            document.getElementById('year').textContent = new Date().getFullYear();
             
             try {
-                const response = await fetch(apiUrl);
+                // 尝试从GitHub API获取数据
+                const response = await fetchWithTimeout(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`,
+                    { timeout: 5000 }
+                );
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const files = await response.json();
-                displayFiles(files);
+                
+                if (!Array.isArray(files)) {
+                    throw new Error('Invalid response format');
+                }
+                
+                // 处理文件数据
+                allFiles = files.map(file => ({
+                    ...file,
+                    sizeNum: file.size || 0,
+                    dateNum: file.last_modified ? new Date(file.last_modified).getTime() : 0,
+                    isDir: file.type === 'dir'
+                }));
+                
+                renderFileTable();
             } catch (error) {
                 showError(error);
-                // 尝试备用方案（直接访问GitHub Pages）
-                tryFallback();
-            }
-        }
-
-        // 备用加载方案
-        async function tryFallback() {
-            const repoPath = CONFIG.repository ? `${CONFIG.username}/${CONFIG.repository}` : `${CONFIG.username}.github.io`;
-            const pageUrl = `https://${CONFIG.username}.github.io/${CONFIG.repository ? CONFIG.repository + '/' : ''}${CONFIG.directory}/`;
-            
-            try {
-                const response = await fetch(pageUrl);
-                if (!response.ok) throw new Error('Fallback failed');
                 
-                const html = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const links = Array.from(doc.querySelectorAll('a[href]'))
-                    .filter(a => !a.href.includes('?') && !a.textContent.includes('../'))
-                    .map(a => ({
-                        name: a.textContent.trim(),
-                        download_url: a.href,
-                        type: a.textContent.endsWith('/') ? 'dir' : 'file'
-                    }));
-                
-                if (links.length > 0) {
-                    displayFiles(links);
-                } else {
-                    throw new Error('目录为空或无法访问');
+                // 如果API失败，尝试直接访问目录
+                try {
+                    const fallbackResponse = await fetchWithTimeout(
+                        `https://${config.owner}.github.io/${config.repo}/${config.path}/`,
+                        { timeout: 3000 }
+                    );
+                    
+                    if (fallbackResponse.ok) {
+                        const html = await fallbackResponse.text();
+                        parseDirectoryListing(html);
+                    }
+                } catch (fallbackError) {
+                    console.log('Fallback also failed:', fallbackError);
                 }
-            } catch (fallbackError) {
-                console.error('备用方案也失败:', fallbackError);
             }
         }
 
-        // 显示文件列表
-        function displayFiles(files) {
+        // 带超时的fetch
+        function fetchWithTimeout(url, options = {}) {
+            const { timeout = 8000 } = options;
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            return fetch(url, {
+                ...options,
+                signal: controller.signal
+            }).finally(() => clearTimeout(timeoutId));
+        }
+
+        // 解析目录列表
+        function parseDirectoryListing(html) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const links = Array.from(doc.querySelectorAll('a[href]'));
+            
+            allFiles = links
+                .map(link => link.getAttribute('href'))
+                .filter(name => !name.startsWith('?') && name !== '../' && name !== '/')
+                .map(name => ({
+                    name,
+                    download_url: `https://${config.owner}.github.io/${config.repo}/${config.path}/${name}`,
+                    sizeNum: 0,
+                    dateNum: 0,
+                    isDir: name.endsWith('/')
+                }));
+            
+            if (allFiles.length > 0) {
+                renderFileTable();
+            } else {
+                showError(new Error('Directory is empty or cannot be accessed'));
+            }
+        }
+
+        // 渲染表格
+        function renderFileTable() {
             const content = document.getElementById('content');
             
-            if (!files || files.length === 0) {
-                content.innerHTML = '<div class="error">目录为空</div>';
+            if (allFiles.length === 0) {
+                content.innerHTML = '<div class="error">Directory is empty</div>';
                 return;
             }
             
@@ -159,21 +259,24 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>文件名</th>
-                            <th>类型</th>
+                            <th class="sortable ${getSortClass('name')}" onclick="sortFiles('name')">Name</th>
+                            <th class="sortable ${getSortClass('size')}" onclick="sortFiles('size')">Size</th>
+                            <th class="sortable ${getSortClass('date')}" onclick="sortFiles('date')">Last Modified</th>
+                            <th>Download</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${files.map(file => `
+                        ${allFiles.map(file => `
                             <tr>
                                 <td>
-                                    <span class="icon">${file.type === 'dir' ? '📁' : '📄'}</span>
-                                    ${file.type === 'dir' ? 
-                                        `<span>${file.name}</span>` : 
-                                        `<a href="${file.download_url || file.html_url}" download="${file.name}">${file.name}</a>`
-                                    }
+                                    <span class="icon">${file.isDir ? '📁' : '📄'}</span>
+                                    ${file.name}
                                 </td>
-                                <td>${file.type === 'dir' ? '文件夹' : '文件'}</td>
+                                <td>${file.sizeNum ? formatSize(file.sizeNum) : '-'}</td>
+                                <td>${file.dateNum ? new Date(file.dateNum).toLocaleString() : '-'}</td>
+                                <td>
+                                    ${!file.isDir ? `<a href="${file.download_url}" download>Download</a>` : '-'}
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -181,34 +284,63 @@
             `;
         }
 
-        // 显示错误
+        // 排序函数
+        function sortFiles(field) {
+            const direction = currentSort.field === field && currentSort.direction === 'asc' ? 'desc' : 'asc';
+            currentSort = { field, direction };
+            
+            allFiles.sort((a, b) => {
+                const valA = getSortValue(a, field);
+                const valB = getSortValue(b, field);
+                return (valA < valB ? -1 : 1) * (direction === 'asc' ? 1 : -1);
+            });
+            
+            renderFileTable();
+        }
+
+        // 辅助函数
+        function getSortValue(file, field) {
+            if (field === 'size') return file.sizeNum;
+            if (field === 'date') return file.dateNum;
+            return file.name.toLowerCase();
+        }
+
+        function getSortClass(field) {
+            return currentSort.field === field ? `sorted-${currentSort.direction}` : '';
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            const units = ['KB', 'MB', 'GB'];
+            let size = bytes;
+            let unitIndex = -1;
+            while (size >= 1024 && unitIndex < units.length - 1) {
+                size /= 1024;
+                unitIndex++;
+            }
+            return size.toFixed(2) + ' ' + units[unitIndex];
+        }
+
         function showError(error) {
             document.getElementById('content').innerHTML = `
                 <div class="error">
-                    <h3>加载失败</h3>
-                    <p><strong>原因:</strong> ${error.message}</p>
-                    <h4>请检查以下配置:</h4>
-                    <ol>
-                        <li>用户名是否正确配置 (当前: ${CONFIG.username})</li>
-                        <li>仓库名称是否正确 (当前: ${CONFIG.repository || 'username.github.io'})</li>
-                        <li>仓库是否为公开状态</li>
-                        <li>GitHub Pages 是否已启用</li>
-                        <li>目录是否存在 (当前: ${CONFIG.directory})</li>
-                    </ol>
-                    <p>如果问题持续，请尝试：</p>
+                    <p>Failed to load file list</p>
+                    <p><strong>Reason:</strong> ${error.message}</p>
+                    <p>Please check:</p>
                     <ul>
-                        <li>等待几分钟后刷新（GitHub Pages 部署可能需要时间）</li>
-                        <li>检查仓库 Settings → Pages 配置</li>
+                        <li>Repository is public</li>
+                        <li>"download" directory exists</li>
+                        <li>GitHub Pages is enabled</li>
                     </ul>
                 </div>
             `;
         }
 
+        // 全局函数
+        window.sortFiles = sortFiles;
+        
         // 初始化
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('path').textContent = `当前路径: /${CONFIG.directory}`;
-            loadFiles();
-        });
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
