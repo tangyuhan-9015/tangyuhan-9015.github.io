@@ -3,206 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文件索引 | GitHub 风格</title>
+    <title>GitHub 文件浏览器</title>
     <style>
         :root {
-            --github-black: #24292e;
-            --github-blue: #0366d6;
-            --github-gray: #f6f8fa;
-            --github-border: #e1e4e8;
-            --github-text: #24292e;
-            --github-text-secondary: #586069;
+            --gh-black: #24292e;
+            --gh-blue: #0366d6;
+            --gh-gray: #f6f8fa;
+            --gh-border: #e1e4e8;
         }
-        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            line-height: 1.5;
-            color: var(--github-text);
-            background-color: white;
             margin: 0;
-            padding: 0;
+            padding: 20px;
+            background-color: white;
+            color: var(--gh-black);
         }
-        
         .container {
             max-width: 1012px;
             margin: 0 auto;
-            padding: 16px;
         }
-        
         header {
             padding: 16px 0;
-            border-bottom: 1px solid var(--github-border);
+            border-bottom: 1px solid var(--gh-border);
             margin-bottom: 16px;
         }
-        
         h1 {
             font-size: 24px;
-            font-weight: 600;
             margin: 0;
-            color: var(--github-black);
         }
-        
-        .path {
-            font-size: 14px;
-            color: var(--github-text-secondary);
-            margin-top: 8px;
-        }
-        
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
-            border: 1px solid var(--github-border);
+            border: 1px solid var(--gh-border);
             border-radius: 6px;
-            overflow: hidden;
         }
-        
-        th {
-            background-color: var(--github-gray);
-            color: var(--github-text-secondary);
+        th, td {
             padding: 10px 16px;
             text-align: left;
+            border-bottom: 1px solid var(--gh-border);
+        }
+        th {
+            background-color: var(--gh-gray);
             font-weight: 600;
-            border-bottom: 1px solid var(--github-border);
         }
-        
-        td {
-            padding: 10px 16px;
-            border-bottom: 1px solid var(--github-border);
-        }
-        
-        tr:last-child td {
-            border-bottom: none;
-        }
-        
         tr:hover {
-            background-color: var(--github-gray);
+            background-color: var(--gh-gray);
         }
-        
         a {
-            color: var(--github-blue);
+            color: var(--gh-blue);
             text-decoration: none;
-            cursor: pointer;
         }
-        
         a:hover {
             text-decoration: underline;
         }
-        
         .icon {
             margin-right: 8px;
-            color: var(--github-text-secondary);
             width: 16px;
-            text-align: center;
             display: inline-block;
         }
-        
-        .loading, .error {
-            padding: 40px;
-            text-align: center;
-            color: var(--github-text-secondary);
-        }
-        
         .error {
             color: #cb2431;
-        }
-        
-        .footer {
-            margin-top: 40px;
-            padding-top: 16px;
-            border-top: 1px solid var(--github-border);
-            color: var(--github-text-secondary);
-            font-size: 12px;
-            text-align: center;
-        }
-        
-        .sortable {
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .sortable:hover {
-            text-decoration: underline;
-        }
-        
-        .sorted-asc::after {
-            content: " ↑";
-            color: var(--github-blue);
-        }
-        
-        .sorted-desc::after {
-            content: " ↓";
-            color: var(--github-blue);
+            padding: 20px;
+            border: 1px solid #ffdce0;
+            background-color: #ffebef;
+            border-radius: 6px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>文件索引</h1>
-            <div class="path">当前路径: /</div>
+            <h1>文件浏览器</h1>
+            <div id="path">当前路径: /</div>
         </header>
 
         <div id="content">
-            <div class="loading">加载文件列表中...</div>
-        </div>
-
-        <div class="footer">
-            <p>© <span id="year"></span> GitHub 风格文件索引</p>
+            <div>加载中...</div>
         </div>
     </div>
 
     <script>
-        // 配置信息
-        const config = {
-            owner: 'YOUR_USERNAME',
-            repo: 'YOUR_REPO',
-            path: ''  // 可以设置为子目录如 'download'
+        // 重要配置 - 必须修改！
+        const CONFIG = {
+            // 修改为您的GitHub用户名
+            username: 'tangyuhan-9015',
+            
+            // 修改为您的仓库名（如果是username.github.io则留空）
+            repository: '',
+            
+            // 要浏览的目录（默认为根目录）
+            directory: 'download'
         };
 
-        // 全局数据
-        let allFiles = [];
-        let currentSort = { field: 'name', direction: 'asc' };
-
-        // 主函数
-        async function init() {
-            document.getElementById('year').textContent = new Date().getFullYear();
+        // 获取文件列表
+        async function loadFiles() {
+            const repoPath = CONFIG.repository ? `${CONFIG.username}/${CONFIG.repository}` : `${CONFIG.username}.github.io`;
+            const apiUrl = `https://api.github.com/repos/${repoPath}/contents/${CONFIG.directory}`;
             
             try {
-                // 尝试从GitHub API获取数据
-                const apiUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
                 const response = await fetch(apiUrl);
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP错误! 状态码: ${response.status}`);
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
                 }
                 
                 const files = await response.json();
-                
-                if (!Array.isArray(files)) {
-                    throw new Error('无效的响应格式');
-                }
-                
-                // 处理文件数据
-                allFiles = files.map(file => ({
-                    ...file,
-                    sizeNum: file.size || 0,
-                    dateNum: file.last_modified ? new Date(file.last_modified).getTime() : 0,
-                    isDir: file.type === 'dir',
-                    downloadUrl: file.download_url || file.html_url
-                }));
-                
-                renderFileTable();
+                displayFiles(files);
             } catch (error) {
                 showError(error);
+                // 尝试备用方案（直接访问GitHub Pages）
+                tryFallback();
             }
         }
 
-        // 渲染表格
-        function renderFileTable() {
+        // 备用加载方案
+        async function tryFallback() {
+            const repoPath = CONFIG.repository ? `${CONFIG.username}/${CONFIG.repository}` : `${CONFIG.username}.github.io`;
+            const pageUrl = `https://${CONFIG.username}.github.io/${CONFIG.repository ? CONFIG.repository + '/' : ''}${CONFIG.directory}/`;
+            
+            try {
+                const response = await fetch(pageUrl);
+                if (!response.ok) throw new Error('Fallback failed');
+                
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const links = Array.from(doc.querySelectorAll('a[href]'))
+                    .filter(a => !a.href.includes('?') && !a.textContent.includes('../'))
+                    .map(a => ({
+                        name: a.textContent.trim(),
+                        download_url: a.href,
+                        type: a.textContent.endsWith('/') ? 'dir' : 'file'
+                    }));
+                
+                if (links.length > 0) {
+                    displayFiles(links);
+                } else {
+                    throw new Error('目录为空或无法访问');
+                }
+            } catch (fallbackError) {
+                console.error('备用方案也失败:', fallbackError);
+            }
+        }
+
+        // 显示文件列表
+        function displayFiles(files) {
             const content = document.getElementById('content');
             
-            if (allFiles.length === 0) {
+            if (!files || files.length === 0) {
                 content.innerHTML = '<div class="error">目录为空</div>';
                 return;
             }
@@ -211,23 +159,21 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="sortable ${getSortClass('name')}" onclick="sortFiles('name')">名称</th>
-                            <th class="sortable ${getSortClass('size')}" onclick="sortFiles('size')">大小</th>
-                            <th class="sortable ${getSortClass('date')}" onclick="sortFiles('date')">修改日期</th>
+                            <th>文件名</th>
+                            <th>类型</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${allFiles.map(file => `
+                        ${files.map(file => `
                             <tr>
                                 <td>
-                                    <span class="icon">${file.isDir ? '📁' : '📄'}</span>
-                                    ${file.isDir ? 
+                                    <span class="icon">${file.type === 'dir' ? '📁' : '📄'}</span>
+                                    ${file.type === 'dir' ? 
                                         `<span>${file.name}</span>` : 
-                                        `<a href="${file.downloadUrl}" download="${file.name}">${file.name}</a>`
+                                        `<a href="${file.download_url || file.html_url}" download="${file.name}">${file.name}</a>`
                                     }
                                 </td>
-                                <td>${!file.isDir && file.sizeNum ? formatSize(file.sizeNum) : '-'}</td>
-                                <td>${file.dateNum ? new Date(file.dateNum).toLocaleString() : '-'}</td>
+                                <td>${file.type === 'dir' ? '文件夹' : '文件'}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -235,63 +181,34 @@
             `;
         }
 
-        // 排序函数
-        function sortFiles(field) {
-            const direction = currentSort.field === field && currentSort.direction === 'asc' ? 'desc' : 'asc';
-            currentSort = { field, direction };
-            
-            allFiles.sort((a, b) => {
-                const valA = getSortValue(a, field);
-                const valB = getSortValue(b, field);
-                return (valA < valB ? -1 : 1) * (direction === 'asc' ? 1 : -1);
-            });
-            
-            renderFileTable();
-        }
-
-        // 辅助函数
-        function getSortValue(file, field) {
-            if (field === 'size') return file.sizeNum;
-            if (field === 'date') return file.dateNum;
-            return file.name.toLowerCase();
-        }
-
-        function getSortClass(field) {
-            return currentSort.field === field ? `sorted-${currentSort.direction}` : '';
-        }
-
-        function formatSize(bytes) {
-            if (bytes < 1024) return bytes + ' B';
-            const units = ['KB', 'MB', 'GB'];
-            let size = bytes;
-            let unitIndex = -1;
-            while (size >= 1024 && unitIndex < units.length - 1) {
-                size /= 1024;
-                unitIndex++;
-            }
-            return size.toFixed(2) + ' ' + units[unitIndex];
-        }
-
+        // 显示错误
         function showError(error) {
             document.getElementById('content').innerHTML = `
                 <div class="error">
-                    <p>加载文件列表失败</p>
+                    <h3>加载失败</h3>
                     <p><strong>原因:</strong> ${error.message}</p>
-                    <p>请检查:</p>
-                    <ul>
-                        <li>仓库是否为公开</li>
-                        <li>仓库名称是否正确</li>
+                    <h4>请检查以下配置:</h4>
+                    <ol>
+                        <li>用户名是否正确配置 (当前: ${CONFIG.username})</li>
+                        <li>仓库名称是否正确 (当前: ${CONFIG.repository || 'username.github.io'})</li>
+                        <li>仓库是否为公开状态</li>
                         <li>GitHub Pages 是否已启用</li>
+                        <li>目录是否存在 (当前: ${CONFIG.directory})</li>
+                    </ol>
+                    <p>如果问题持续，请尝试：</p>
+                    <ul>
+                        <li>等待几分钟后刷新（GitHub Pages 部署可能需要时间）</li>
+                        <li>检查仓库 Settings → Pages 配置</li>
                     </ul>
                 </div>
             `;
         }
 
-        // 全局函数
-        window.sortFiles = sortFiles;
-        
         // 初始化
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('path').textContent = `当前路径: /${CONFIG.directory}`;
+            loadFiles();
+        });
     </script>
 </body>
 </html>
