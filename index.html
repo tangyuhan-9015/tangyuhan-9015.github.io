@@ -3,49 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tsinghua Mirror Style File Index</title>
+    <title>GitHub 文件浏览器</title>
     <style>
         :root {
-            --tsinghua-blue: #003366;
-            --tsinghua-light-blue: #0066cc;
-            --tsinghua-gray: #f5f5f5;
-            --tsinghua-dark-gray: #666666;
+            --gh-header-bg: #24292f;
+            --gh-blue: #0969da;
+            --gh-border: #d0d7de;
+            --gh-bg: #f6f8fa;
+            --gh-text: #24292f;
+            --gh-text-secondary: #57606a;
         }
         
         body {
-            font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            color: var(--gh-text);
+            background-color: #ffffff;
             margin: 0;
             padding: 0;
-            background-color: var(--tsinghua-gray);
-            color: #333;
         }
         
         .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            background: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-radius: 2px;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 16px;
         }
         
         header {
-            background-color: var(--tsinghua-blue);
+            background-color: var(--gh-header-bg);
             color: white;
-            padding: 15px 20px;
-            border-bottom: 3px solid var(--tsinghua-light-blue);
+            padding: 16px 0;
+            margin-bottom: 24px;
+        }
+        
+        .header-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
         }
         
         h1 {
+            font-size: 20px;
+            font-weight: 600;
             margin: 0;
-            font-size: 22px;
-            font-weight: normal;
+            display: flex;
+            align-items: center;
+        }
+        
+        .octicon {
+            margin-right: 8px;
+            fill: currentColor;
         }
         
         .path {
-            font-size: 13px;
-            color: #ccc;
-            margin-top: 5px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+        }
+        
+        .file-browser {
+            border: 1px solid var(--gh-border);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 24px;
         }
         
         table {
@@ -54,26 +76,45 @@
             font-size: 14px;
         }
         
+        thead {
+            background-color: var(--gh-bg);
+            border-bottom: 1px solid var(--gh-border);
+        }
+        
         th {
-            background-color: var(--tsinghua-gray);
-            color: var(--tsinghua-blue);
-            padding: 10px 15px;
+            padding: 10px 16px;
             text-align: left;
-            font-weight: normal;
-            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+            color: var(--gh-text-secondary);
         }
         
         td {
-            padding: 10px 15px;
-            border-bottom: 1px solid #eee;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--gh-border);
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
         }
         
         tr:hover {
-            background-color: #f9f9f9;
+            background-color: var(--gh-bg);
+        }
+        
+        .file-name {
+            display: flex;
+            align-items: center;
+        }
+        
+        .file-icon {
+            margin-right: 8px;
+            color: var(--gh-text-secondary);
+            width: 16px;
+            text-align: center;
         }
         
         a {
-            color: var(--tsinghua-light-blue);
+            color: var(--gh-blue);
             text-decoration: none;
         }
         
@@ -81,69 +122,63 @@
             text-decoration: underline;
         }
         
-        .icon {
-            margin-right: 8px;
-            color: var(--tsinghua-dark-gray);
-        }
-        
         .loading, .error {
-            padding: 30px;
+            padding: 40px;
             text-align: center;
-            color: var(--tsinghua-dark-gray);
         }
         
         .error {
-            color: #cc0000;
+            color: #cf222e;
+            background-color: #ffebe9;
+            border-radius: 6px;
+            border: 1px solid rgba(208, 215, 222, 0.8);
+            padding: 16px;
+            margin: 16px 0;
+        }
+        
+        .sort-indicator {
+            margin-left: 4px;
+            color: var(--gh-blue);
         }
         
         .footer {
-            padding: 15px;
-            text-align: center;
+            margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px solid var(--gh-border);
+            color: var(--gh-text-secondary);
             font-size: 12px;
-            color: var(--tsinghua-dark-gray);
-            border-top: 1px solid #eee;
+            text-align: center;
         }
         
-        .sortable {
-            cursor: pointer;
-            position: relative;
-            padding-right: 20px;
-        }
-        
-        .sortable::after {
-            content: "↓↑";
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 10px;
-            color: #999;
-        }
-        
-        .sorted-asc::after {
-            content: "↑";
-            color: var(--tsinghua-light-blue);
-        }
-        
-        .sorted-desc::after {
-            content: "↓";
-            color: var(--tsinghua-light-blue);
+        @media (max-width: 768px) {
+            .mobile-hidden {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Index of /download</h1>
-            <div class="path">Tsinghua Mirror Style File Index</div>
-        </header>
+    <header>
+        <div class="header-content">
+            <h1>
+                <svg class="octicon" height="24" viewBox="0 0 24 24" width="24">
+                    <path fill-rule="evenodd" d="M3 3a2 2 0 012-2h9.982a2 2 0 011.414.586l4.018 4.018A2 2 0 0121 7.018V21a2 2 0 01-2 2H5a2 2 0 01-2-2V3zm2-.5a.5.5 0 00-.5.5v18a.5.5 0 00.5.5h14a.5.5 0 00.5-.5V7.018a.5.5 0 00-.146-.354l-4.018-4.018A.5.5 0 0014.982 2.5H5z"></path>
+                    <path d="M8 12a.75.75 0 01.75-.75h6.5a.75.75 0 010 1.5h-6.5A.75.75 0 018 12zm0 4a.75.75 0 01.75-.75h6.5a.75.75 0 010 1.5h-6.5A.75.75 0 018 16z"></path>
+                </svg>
+                <span>文件浏览器</span>
+            </h1>
+        </div>
+    </header>
 
-        <div id="content">
-            <div class="loading">Loading file list...</div>
+    <div class="container">
+        <div id="path" class="path">/download</div>
+
+        <div id="content" class="file-browser">
+            <div class="loading">加载文件列表中...</div>
         </div>
 
         <div class="footer">
-            <p>© <span id="year"></span> File Hosting Service | Style from Tsinghua Mirror</p>
+            <p>© <span id="year"></span> GitHub 文件浏览器</p>
         </div>
     </div>
 
@@ -171,13 +206,13 @@
                 );
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP错误: ${response.status}`);
                 }
                 
                 const files = await response.json();
                 
                 if (!Array.isArray(files)) {
-                    throw new Error('Invalid response format');
+                    throw new Error('无效的响应格式');
                 }
                 
                 // 处理文件数据
@@ -185,27 +220,48 @@
                     ...file,
                     sizeNum: file.size || 0,
                     dateNum: file.last_modified ? new Date(file.last_modified).getTime() : 0,
-                    isDir: file.type === 'dir'
+                    isDir: file.type === 'dir',
+                    downloadUrl: file.download_url || file.html_url
                 }));
                 
                 renderFileTable();
             } catch (error) {
                 showError(error);
-                
                 // 如果API失败，尝试直接访问目录
-                try {
-                    const fallbackResponse = await fetchWithTimeout(
-                        `https://${config.owner}.github.io/${config.repo}/${config.path}/`,
-                        { timeout: 3000 }
-                    );
-                    
-                    if (fallbackResponse.ok) {
-                        const html = await fallbackResponse.text();
-                        parseDirectoryListing(html);
-                    }
-                } catch (fallbackError) {
-                    console.log('Fallback also failed:', fallbackError);
+                tryFallback();
+            }
+        }
+
+        // 备用加载方案
+        async function tryFallback() {
+            const pageUrl = `https://${config.owner}.github.io/${config.repo}/${config.path}/`;
+            
+            try {
+                const response = await fetchWithTimeout(pageUrl, { timeout: 3000 });
+                if (!response.ok) throw new Error('备用方案失败');
+                
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const links = Array.from(doc.querySelectorAll('a[href]'))
+                    .filter(a => !a.href.includes('?') && !a.textContent.includes('../'))
+                    .map(a => ({
+                        name: a.textContent.trim(),
+                        downloadUrl: a.href,
+                        type: a.textContent.endsWith('/') ? 'dir' : 'file',
+                        sizeNum: 0,
+                        dateNum: 0,
+                        isDir: a.textContent.endsWith('/')
+                    }));
+                
+                if (links.length > 0) {
+                    allFiles = links;
+                    renderFileTable();
+                } else {
+                    throw new Error('目录为空或无法访问');
                 }
+            } catch (fallbackError) {
+                console.log('备用方案也失败:', fallbackError);
             }
         }
 
@@ -222,36 +278,12 @@
             }).finally(() => clearTimeout(timeoutId));
         }
 
-        // 解析目录列表
-        function parseDirectoryListing(html) {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const links = Array.from(doc.querySelectorAll('a[href]'));
-            
-            allFiles = links
-                .map(link => link.getAttribute('href'))
-                .filter(name => !name.startsWith('?') && name !== '../' && name !== '/')
-                .map(name => ({
-                    name,
-                    download_url: `https://${config.owner}.github.io/${config.repo}/${config.path}/${name}`,
-                    sizeNum: 0,
-                    dateNum: 0,
-                    isDir: name.endsWith('/')
-                }));
-            
-            if (allFiles.length > 0) {
-                renderFileTable();
-            } else {
-                showError(new Error('Directory is empty or cannot be accessed'));
-            }
-        }
-
         // 渲染表格
         function renderFileTable() {
             const content = document.getElementById('content');
             
             if (allFiles.length === 0) {
-                content.innerHTML = '<div class="error">Directory is empty</div>';
+                content.innerHTML = '<div class="error">目录为空</div>';
                 return;
             }
             
@@ -259,24 +291,37 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="sortable ${getSortClass('name')}" onclick="sortFiles('name')">Name</th>
-                            <th class="sortable ${getSortClass('size')}" onclick="sortFiles('size')">Size</th>
-                            <th class="sortable ${getSortClass('date')}" onclick="sortFiles('date')">Last Modified</th>
-                            <th>Download</th>
+                            <th onclick="sortFiles('name')">
+                                名称
+                                ${currentSort.field === 'name' ? 
+                                    `<span class="sort-indicator">${currentSort.direction === 'asc' ? '↑' : '↓'}</span>` : ''}
+                            </th>
+                            <th class="mobile-hidden" onclick="sortFiles('size')">
+                                大小
+                                ${currentSort.field === 'size' ? 
+                                    `<span class="sort-indicator">${currentSort.direction === 'asc' ? '↑' : '↓'}</span>` : ''}
+                            </th>
+                            <th class="mobile-hidden" onclick="sortFiles('date')">
+                                修改时间
+                                ${currentSort.field === 'date' ? 
+                                    `<span class="sort-indicator">${currentSort.direction === 'asc' ? '↑' : '↓'}</span>` : ''}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         ${allFiles.map(file => `
                             <tr>
                                 <td>
-                                    <span class="icon">${file.isDir ? '📁' : '📄'}</span>
-                                    ${file.name}
+                                    <div class="file-name">
+                                        <span class="file-icon">${file.isDir ? '📁' : '📄'}</span>
+                                        ${file.isDir ? 
+                                            `<span>${file.name}</span>` : 
+                                            `<a href="${file.downloadUrl}" download="${file.name}">${file.name}</a>`
+                                        }
+                                    </div>
                                 </td>
-                                <td>${file.sizeNum ? formatSize(file.sizeNum) : '-'}</td>
-                                <td>${file.dateNum ? new Date(file.dateNum).toLocaleString() : '-'}</td>
-                                <td>
-                                    ${!file.isDir ? `<a href="${file.download_url}" download>Download</a>` : '-'}
-                                </td>
+                                <td class="mobile-hidden">${!file.isDir && file.sizeNum ? formatSize(file.sizeNum) : '-'}</td>
+                                <td class="mobile-hidden">${file.dateNum ? new Date(file.dateNum).toLocaleString() : '-'}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -286,61 +331,4 @@
 
         // 排序函数
         function sortFiles(field) {
-            const direction = currentSort.field === field && currentSort.direction === 'asc' ? 'desc' : 'asc';
-            currentSort = { field, direction };
-            
-            allFiles.sort((a, b) => {
-                const valA = getSortValue(a, field);
-                const valB = getSortValue(b, field);
-                return (valA < valB ? -1 : 1) * (direction === 'asc' ? 1 : -1);
-            });
-            
-            renderFileTable();
-        }
-
-        // 辅助函数
-        function getSortValue(file, field) {
-            if (field === 'size') return file.sizeNum;
-            if (field === 'date') return file.dateNum;
-            return file.name.toLowerCase();
-        }
-
-        function getSortClass(field) {
-            return currentSort.field === field ? `sorted-${currentSort.direction}` : '';
-        }
-
-        function formatSize(bytes) {
-            if (bytes < 1024) return bytes + ' B';
-            const units = ['KB', 'MB', 'GB'];
-            let size = bytes;
-            let unitIndex = -1;
-            while (size >= 1024 && unitIndex < units.length - 1) {
-                size /= 1024;
-                unitIndex++;
-            }
-            return size.toFixed(2) + ' ' + units[unitIndex];
-        }
-
-        function showError(error) {
-            document.getElementById('content').innerHTML = `
-                <div class="error">
-                    <p>Failed to load file list</p>
-                    <p><strong>Reason:</strong> ${error.message}</p>
-                    <p>Please check:</p>
-                    <ul>
-                        <li>Repository is public</li>
-                        <li>"download" directory exists</li>
-                        <li>GitHub Pages is enabled</li>
-                    </ul>
-                </div>
-            `;
-        }
-
-        // 全局函数
-        window.sortFiles = sortFiles;
-        
-        // 初始化
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
-</body>
-</html>
+            const direction = currentSort.field === field
