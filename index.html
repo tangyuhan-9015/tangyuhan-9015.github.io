@@ -1,38 +1,163 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello World</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <title>文件下载中心 | 支持排序</title>
+    <style>
+        /* 基础样式 */
+        body {
+            font-family: -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f6f8fa;
+            color: #24292e;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        /* 表格样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e1e4e8;
+            text-align: left;
+        }
+        th {
+            background: #f6f8fa;
+            cursor: pointer;
+        }
+        th:hover {
+            background: #eaecef;
+        }
+        th.sorted-asc::after { content: " ↑"; color: #0366d6; }
+        th.sorted-desc::after { content: " ↓"; color: #0366d6; }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .mobile-hide { display: none; }
+            th, td { padding: 8px 12px; }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-lg p-8 max-w-md w-full transform transition-all hover:scale-105 hover:shadow-xl">
-        <div class="text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-6">
-                <i class="fa fa-globe text-blue-500 text-3xl"></i>
-            </div>
-            <h1 class="text-[clamp(2rem,5vw,3rem)] font-bold text-gray-800 mb-2">Hello World!</h1>
-            <p class="text-gray-600 mb-6">Welcome to my first web page</p>
-            <button id="changeTextBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
-                Change Text
-            </button>
+<body>
+    <div class="container">
+        <header>
+            <h1>文件下载中心</h1>
+            <div class="path">路径: /download</div>
+        </header>
+
+        <div id="content">加载中...</div>
+
+        <div class="footer">
+            <p>© <span id="year"></span> GitHub 文件托管</p>
         </div>
     </div>
 
     <script>
-        document.getElementById('changeTextBtn').addEventListener('click', function() {
-            const heading = document.querySelector('h1');
-            if (heading.textContent === 'Hello World!') {
-                heading.textContent = 'Hello Github!';
-                heading.classList.add('text-green-500');
-            } else {
-                heading.textContent = 'Hello World!';
-                heading.classList.remove('text-green-500');
+        // 基本配置
+        const config = {
+            owner: 'tangyuhan-9015',
+            repo: 'github.io',
+            path: 'download'
+        };
+
+        // 全局数据
+        let allFiles = [];
+        let currentSort = { field: 'name', direction: 'asc' };
+
+        // 获取文件数据
+        async function fetchFiles() {
+            try {
+                const response = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`
+                );
+                const files = await response.json();
+                
+                allFiles = files.map(file => ({
+                    ...file,
+                    sizeNum: file.size || 0,
+                    dateNum: file.last_modified ? new Date(file.last_modified).getTime() : 0
+                }));
+                
+                renderFileTable();
+            } catch (error) {
+                document.getElementById('content').innerHTML = `
+                    <div class="error">加载失败: ${error.message}</div>
+                `;
             }
-        });
+        }
+
+        // 排序功能
+        function sortFiles(field, direction) {
+            currentSort = { field, direction };
+            allFiles.sort((a, b) => {
+                const valA = getSortValue(a, field);
+                const valB = getSortValue(b, field);
+                return (valA < valB ? -1 : 1) * (direction === 'asc' ? 1 : -1);
+            });
+            renderFileTable();
+        }
+
+        function getSortValue(file, field) {
+            if (field === 'size') return file.sizeNum;
+            if (field === 'date') return file.dateNum;
+            return file.name.toLowerCase();
+        }
+
+        // 渲染表格
+        function renderFileTable() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sort('name')" class="${getSortClass('name')}">文件名</th>
+                            <th onclick="sort('size')" class="mobile-hide ${getSortClass('size')}">大小</th>
+                            <th onclick="sort('date')" class="mobile-hide ${getSortClass('date')}">最后修改</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${allFiles.map(file => `
+                            <tr>
+                                <td>📄 ${file.name}</td>
+                                <td class="mobile-hide">${file.size ? formatSize(file.size) : '-'}</td>
+                                <td class="mobile-hide">${file.last_modified ? new Date(file.last_modified).toLocaleString() : '-'}</td>
+                                <td><a href="${file.download_url}" target="_blank">下载</a></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // 辅助函数
+        function formatSize(bytes) {
+            if (!bytes) return '0 Bytes';
+            const units = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(1024));
+            return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + units[i];
+        }
+
+        function getSortClass(field) {
+            return currentSort.field === field ? `sorted-${currentSort.direction}` : '';
+        }
+
+        // 初始化
+        document.getElementById('year').textContent = new Date().getFullYear();
+        window.sort = (field) => {
+            sortFiles(field, currentSort.field === field && currentSort.direction === 'asc' ? 'desc' : 'asc');
+        };
+        fetchFiles();
     </script>
 </body>
 </html>
-    
