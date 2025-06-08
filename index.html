@@ -202,7 +202,7 @@
                 // 尝试从GitHub API获取数据
                 const response = await fetchWithTimeout(
                     `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`,
-                    { timeout: 5000 }
+                    { timeout: 60 }
                 );
                 
                 if (!response.ok) {
