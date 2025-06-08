@@ -3,78 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tsinghua Mirror Style File Index</title>
+    <title>文件索引 | GitHub 风格</title>
     <style>
         :root {
-            --tsinghua-blue: #003366;
-            --tsinghua-light-blue: #0066cc;
-            --tsinghua-gray: #f5f5f5;
-            --tsinghua-dark-gray: #666666;
+            --github-black: #24292e;
+            --github-blue: #0366d6;
+            --github-gray: #f6f8fa;
+            --github-border: #e1e4e8;
+            --github-text: #24292e;
+            --github-text-secondary: #586069;
         }
         
         body {
-            font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            color: var(--github-text);
+            background-color: white;
             margin: 0;
             padding: 0;
-            background-color: var(--tsinghua-gray);
-            color: #333;
         }
         
         .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            background: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-radius: 2px;
+            max-width: 1012px;
+            margin: 0 auto;
+            padding: 16px;
         }
         
         header {
-            background-color: var(--tsinghua-blue);
-            color: white;
-            padding: 15px 20px;
-            border-bottom: 3px solid var(--tsinghua-light-blue);
+            padding: 16px 0;
+            border-bottom: 1px solid var(--github-border);
+            margin-bottom: 16px;
         }
         
         h1 {
+            font-size: 24px;
+            font-weight: 600;
             margin: 0;
-            font-size: 22px;
-            font-weight: normal;
+            color: var(--github-black);
         }
         
         .path {
-            font-size: 13px;
-            color: #ccc;
-            margin-top: 5px;
+            font-size: 14px;
+            color: var(--github-text-secondary);
+            margin-top: 8px;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
+            border: 1px solid var(--github-border);
+            border-radius: 6px;
+            overflow: hidden;
         }
         
         th {
-            background-color: var(--tsinghua-gray);
-            color: var(--tsinghua-blue);
-            padding: 10px 15px;
+            background-color: var(--github-gray);
+            color: var(--github-text-secondary);
+            padding: 10px 16px;
             text-align: left;
-            font-weight: normal;
-            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+            border-bottom: 1px solid var(--github-border);
         }
         
         td {
-            padding: 10px 15px;
-            border-bottom: 1px solid #eee;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--github-border);
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
         }
         
         tr:hover {
-            background-color: #f9f9f9;
+            background-color: var(--github-gray);
         }
         
         a {
-            color: var(--tsinghua-light-blue);
+            color: var(--github-blue);
             text-decoration: none;
+            cursor: pointer;
         }
         
         a:hover {
@@ -83,76 +91,73 @@
         
         .icon {
             margin-right: 8px;
-            color: var(--tsinghua-dark-gray);
+            color: var(--github-text-secondary);
+            width: 16px;
+            text-align: center;
+            display: inline-block;
         }
         
         .loading, .error {
-            padding: 30px;
+            padding: 40px;
             text-align: center;
-            color: var(--tsinghua-dark-gray);
+            color: var(--github-text-secondary);
         }
         
         .error {
-            color: #cc0000;
+            color: #cb2431;
         }
         
         .footer {
-            padding: 15px;
-            text-align: center;
+            margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px solid var(--github-border);
+            color: var(--github-text-secondary);
             font-size: 12px;
-            color: var(--tsinghua-dark-gray);
-            border-top: 1px solid #eee;
+            text-align: center;
         }
         
         .sortable {
             cursor: pointer;
             position: relative;
-            padding-right: 20px;
         }
         
-        .sortable::after {
-            content: "↓↑";
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 10px;
-            color: #999;
+        .sortable:hover {
+            text-decoration: underline;
         }
         
         .sorted-asc::after {
-            content: "↑";
-            color: var(--tsinghua-light-blue);
+            content: " ↑";
+            color: var(--github-blue);
         }
         
         .sorted-desc::after {
-            content: "↓";
-            color: var(--tsinghua-light-blue);
+            content: " ↓";
+            color: var(--github-blue);
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Index of /download</h1>
-            <div class="path">Tsinghua Mirror Style File Index</div>
+            <h1>文件索引</h1>
+            <div class="path">当前路径: /</div>
         </header>
 
         <div id="content">
-            <div class="loading">Loading file list...</div>
+            <div class="loading">加载文件列表中...</div>
         </div>
 
         <div class="footer">
-            <p>© <span id="year"></span> File Hosting Service | Style from Tsinghua Mirror</p>
+            <p>© <span id="year"></span> GitHub 风格文件索引</p>
         </div>
     </div>
 
     <script>
         // 配置信息
         const config = {
-            owner: 'tangyuhan-9015',
-            repo: 'github.io',
-            path: 'download'
+            owner: 'YOUR_USERNAME',
+            repo: 'YOUR_REPO',
+            path: ''  // 可以设置为子目录如 'download'
         };
 
         // 全局数据
@@ -165,19 +170,17 @@
             
             try {
                 // 尝试从GitHub API获取数据
-                const response = await fetchWithTimeout(
-                    `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`,
-                    { timeout: 5000 }
-                );
+                const apiUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
+                const response = await fetch(apiUrl);
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP错误! 状态码: ${response.status}`);
                 }
                 
                 const files = await response.json();
                 
                 if (!Array.isArray(files)) {
-                    throw new Error('Invalid response format');
+                    throw new Error('无效的响应格式');
                 }
                 
                 // 处理文件数据
@@ -185,64 +188,13 @@
                     ...file,
                     sizeNum: file.size || 0,
                     dateNum: file.last_modified ? new Date(file.last_modified).getTime() : 0,
-                    isDir: file.type === 'dir'
+                    isDir: file.type === 'dir',
+                    downloadUrl: file.download_url || file.html_url
                 }));
                 
                 renderFileTable();
             } catch (error) {
                 showError(error);
-                
-                // 如果API失败，尝试直接访问目录
-                try {
-                    const fallbackResponse = await fetchWithTimeout(
-                        `https://${config.owner}.github.io/${config.repo}/${config.path}/`,
-                        { timeout: 3000 }
-                    );
-                    
-                    if (fallbackResponse.ok) {
-                        const html = await fallbackResponse.text();
-                        parseDirectoryListing(html);
-                    }
-                } catch (fallbackError) {
-                    console.log('Fallback also failed:', fallbackError);
-                }
-            }
-        }
-
-        // 带超时的fetch
-        function fetchWithTimeout(url, options = {}) {
-            const { timeout = 8000 } = options;
-            
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeout);
-            
-            return fetch(url, {
-                ...options,
-                signal: controller.signal
-            }).finally(() => clearTimeout(timeoutId));
-        }
-
-        // 解析目录列表
-        function parseDirectoryListing(html) {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const links = Array.from(doc.querySelectorAll('a[href]'));
-            
-            allFiles = links
-                .map(link => link.getAttribute('href'))
-                .filter(name => !name.startsWith('?') && name !== '../' && name !== '/')
-                .map(name => ({
-                    name,
-                    download_url: `https://${config.owner}.github.io/${config.repo}/${config.path}/${name}`,
-                    sizeNum: 0,
-                    dateNum: 0,
-                    isDir: name.endsWith('/')
-                }));
-            
-            if (allFiles.length > 0) {
-                renderFileTable();
-            } else {
-                showError(new Error('Directory is empty or cannot be accessed'));
             }
         }
 
@@ -251,7 +203,7 @@
             const content = document.getElementById('content');
             
             if (allFiles.length === 0) {
-                content.innerHTML = '<div class="error">Directory is empty</div>';
+                content.innerHTML = '<div class="error">目录为空</div>';
                 return;
             }
             
@@ -259,10 +211,9 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="sortable ${getSortClass('name')}" onclick="sortFiles('name')">Name</th>
-                            <th class="sortable ${getSortClass('size')}" onclick="sortFiles('size')">Size</th>
-                            <th class="sortable ${getSortClass('date')}" onclick="sortFiles('date')">Last Modified</th>
-                            <th>Download</th>
+                            <th class="sortable ${getSortClass('name')}" onclick="sortFiles('name')">名称</th>
+                            <th class="sortable ${getSortClass('size')}" onclick="sortFiles('size')">大小</th>
+                            <th class="sortable ${getSortClass('date')}" onclick="sortFiles('date')">修改日期</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -270,13 +221,13 @@
                             <tr>
                                 <td>
                                     <span class="icon">${file.isDir ? '📁' : '📄'}</span>
-                                    ${file.name}
+                                    ${file.isDir ? 
+                                        `<span>${file.name}</span>` : 
+                                        `<a href="${file.downloadUrl}" download="${file.name}">${file.name}</a>`
+                                    }
                                 </td>
-                                <td>${file.sizeNum ? formatSize(file.sizeNum) : '-'}</td>
+                                <td>${!file.isDir && file.sizeNum ? formatSize(file.sizeNum) : '-'}</td>
                                 <td>${file.dateNum ? new Date(file.dateNum).toLocaleString() : '-'}</td>
-                                <td>
-                                    ${!file.isDir ? `<a href="${file.download_url}" download>Download</a>` : '-'}
-                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -324,13 +275,13 @@
         function showError(error) {
             document.getElementById('content').innerHTML = `
                 <div class="error">
-                    <p>Failed to load file list</p>
-                    <p><strong>Reason:</strong> ${error.message}</p>
-                    <p>Please check:</p>
+                    <p>加载文件列表失败</p>
+                    <p><strong>原因:</strong> ${error.message}</p>
+                    <p>请检查:</p>
                     <ul>
-                        <li>Repository is public</li>
-                        <li>"download" directory exists</li>
-                        <li>GitHub Pages is enabled</li>
+                        <li>仓库是否为公开</li>
+                        <li>仓库名称是否正确</li>
+                        <li>GitHub Pages 是否已启用</li>
                     </ul>
                 </div>
             `;
