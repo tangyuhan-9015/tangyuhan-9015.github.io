@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文件下载中心 | 支持排序</title>
+    <title>文件下载中心</title>
     <style>
-        /* 基础样式 */
         body {
-            font-family: -apple-system, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             margin: 0;
             padding: 20px;
             background: #f6f8fa;
@@ -16,15 +15,29 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
+            background: #ffffff;
             border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
         }
-        
-        /* 表格样式 */
+        header {
+            padding: 20px;
+            background: #0366d6;
+            color: white;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        header .path {
+            font-size: 14px;
+            margin-top: 5px;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
+            margin: 20px 0;
         }
         th, td {
             padding: 12px 16px;
@@ -34,17 +47,94 @@
         th {
             background: #f6f8fa;
             cursor: pointer;
+            color: #24292e;
         }
         th:hover {
-            background: #eaecef;
+            background: #e1e4e8;
         }
         th.sorted-asc::after { content: " ↑"; color: #0366d6; }
         th.sorted-desc::after { content: " ↓"; color: #0366d6; }
-        
-        /* 响应式 */
+        tr:hover {
+            background: #f1f8ff;
+        }
+        td a {
+            text-decoration: none;
+            color: white;
+            background: #28a745;
+            padding: 6px 12px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        td a:hover {
+            background: #218838;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            background: #f6f8fa;
+            font-size: 14px;
+            color: #586069;
+        }
+    
+        /* 大屏幕适配 */
+        @media (min-width: 1440px) {
+            .container {
+                max-width: 1600px; /* 增加容器宽度 */
+            }
+            header h1 {
+                font-size: 28px; /* 增大标题字体 */
+            }
+            th, td {
+                padding: 16px 20px; /* 增加表格单元格间距 */
+            }
+            table {
+                margin: 30px 0; /* 增加表格与其他元素的间距 */
+            }
+        }
+    
+        /* 中屏幕适配 */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 10px;
+            }
+            th, td {
+                padding: 10px;
+            }
+            header h1 {
+                font-size: 22px;
+            }
+        }
+    
+        /* 小屏幕适配 */
         @media (max-width: 768px) {
             .mobile-hide { display: none; }
-            th, td { padding: 8px 12px; }
+            th, td {
+                padding: 8px 12px;
+            }
+            header h1 {
+                font-size: 20px;
+            }
+            td a {
+                padding: 4px 8px;
+            }
+        }
+    
+        /* 超小屏幕适配 */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            header h1 {
+                font-size: 18px;
+            }
+            th, td {
+                font-size: 14px;
+                padding: 6px 8px;
+            }
+            td a {
+                font-size: 12px;
+                padding: 3px 6px;
+            }
         }
     </style>
 </head>
@@ -54,49 +144,43 @@
             <h1>文件下载中心</h1>
             <div class="path">路径: /download</div>
         </header>
-
         <div id="content">加载中...</div>
-
         <div class="footer">
             <p>© <span id="year"></span> GitHub 文件托管</p>
         </div>
     </div>
-
     <script>
-        // 基本配置
         const config = {
             owner: 'tangyuhan-9015',
             repo: 'github.io',
             path: 'download'
         };
-
-        // 全局数据
         let allFiles = [];
         let currentSort = { field: 'name', direction: 'asc' };
-
-        // 获取文件数据
         async function fetchFiles() {
+            const content = document.getElementById('content');
             try {
+                content.innerHTML = '加载中...';
                 const response = await fetch(
                     `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`
                 );
+                if (!response.ok) {
+                    throw new Error(`请求失败，状态码: ${response.status}`);
+                }
                 const files = await response.json();
-                
+                if (!Array.isArray(files) || files.length === 0) {
+                    throw new Error('未找到任何文件');
+                }
                 allFiles = files.map(file => ({
                     ...file,
                     sizeNum: file.size || 0,
                     dateNum: file.last_modified ? new Date(file.last_modified).getTime() : 0
                 }));
-                
                 renderFileTable();
             } catch (error) {
-                document.getElementById('content').innerHTML = `
-                    <div class="error">加载失败: ${error.message}</div>
-                `;
+                content.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
             }
         }
-
-        // 排序功能
         function sortFiles(field, direction) {
             currentSort = { field, direction };
             allFiles.sort((a, b) => {
@@ -106,14 +190,11 @@
             });
             renderFileTable();
         }
-
         function getSortValue(file, field) {
             if (field === 'size') return file.sizeNum;
             if (field === 'date') return file.dateNum;
             return file.name.toLowerCase();
         }
-
-        // 渲染表格
         function renderFileTable() {
             const content = document.getElementById('content');
             content.innerHTML = `
@@ -139,20 +220,15 @@
                 </table>
             `;
         }
-
-        // 辅助函数
         function formatSize(bytes) {
             if (!bytes) return '0 Bytes';
             const units = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(1024));
             return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + units[i];
         }
-
         function getSortClass(field) {
             return currentSort.field === field ? `sorted-${currentSort.direction}` : '';
         }
-
-        // 初始化
         document.getElementById('year').textContent = new Date().getFullYear();
         window.sort = (field) => {
             sortFiles(field, currentSort.field === field && currentSort.direction === 'asc' ? 'desc' : 'asc');
