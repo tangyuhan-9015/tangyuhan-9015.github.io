@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文件下载中心</title>
+    <title id="page-title">文件浏览</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -75,73 +75,12 @@
             font-size: 14px;
             color: #586069;
         }
-    
-        /* 大屏幕适配 */
-        @media (min-width: 1440px) {
-            .container {
-                max-width: 1600px; /* 增加容器宽度 */
-            }
-            header h1 {
-                font-size: 28px; /* 增大标题字体 */
-            }
-            th, td {
-                padding: 16px 20px; /* 增加表格单元格间距 */
-            }
-            table {
-                margin: 30px 0; /* 增加表格与其他元素的间距 */
-            }
-        }
-    
-        /* 中屏幕适配 */
-        @media (max-width: 1024px) {
-            .container {
-                padding: 10px;
-            }
-            th, td {
-                padding: 10px;
-            }
-            header h1 {
-                font-size: 22px;
-            }
-        }
-    
-        /* 小屏幕适配 */
-        @media (max-width: 768px) {
-            .mobile-hide { display: none; }
-            th, td {
-                padding: 8px 12px;
-            }
-            header h1 {
-                font-size: 20px;
-            }
-            td a {
-                padding: 4px 8px;
-            }
-        }
-    
-        /* 超小屏幕适配 */
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            header h1 {
-                font-size: 18px;
-            }
-            th, td {
-                font-size: 14px;
-                padding: 6px 8px;
-            }
-            td a {
-                font-size: 12px;
-                padding: 3px 6px;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>文件下载中心</h1>
+            <h1>文件浏览</h1>
             <div class="path">路径: /download</div>
         </header>
         <div id="content">加载中...</div>
@@ -157,6 +96,7 @@
         };
         let allFiles = [];
         let currentSort = { field: 'name', direction: 'asc' };
+
         async function fetchFiles() {
             const content = document.getElementById('content');
             try {
@@ -171,16 +111,18 @@
                 if (!Array.isArray(files) || files.length === 0) {
                     throw new Error('未找到任何文件');
                 }
-                allFiles = files.map(file => ({
+                allFiles = files.filter(file => file.type === 'file').map(file => ({
                     ...file,
                     sizeNum: file.size || 0,
                     dateNum: file.last_modified ? new Date(file.last_modified).getTime() : 0
                 }));
+                updateTitle(config.path);
                 renderFileTable();
             } catch (error) {
                 content.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
             }
         }
+
         function sortFiles(field, direction) {
             currentSort = { field, direction };
             allFiles.sort((a, b) => {
@@ -190,11 +132,13 @@
             });
             renderFileTable();
         }
+
         function getSortValue(file, field) {
             if (field === 'size') return file.sizeNum;
             if (field === 'date') return file.dateNum;
             return file.name.toLowerCase();
         }
+
         function renderFileTable() {
             const content = document.getElementById('content');
             content.innerHTML = `
@@ -220,19 +164,27 @@
                 </table>
             `;
         }
+
         function formatSize(bytes) {
             if (!bytes) return '0 Bytes';
             const units = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(1024));
             return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + units[i];
         }
+
         function getSortClass(field) {
             return currentSort.field === field ? `sorted-${currentSort.direction}` : '';
         }
+
+        function updateTitle(path) {
+            document.title = `文件浏览${path}`;
+        }
+
         document.getElementById('year').textContent = new Date().getFullYear();
         window.sort = (field) => {
             sortFiles(field, currentSort.field === field && currentSort.direction === 'asc' ? 'desc' : 'asc');
         };
+
         fetchFiles();
     </script>
 </body>
